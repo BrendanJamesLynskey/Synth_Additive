@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Additive — Harmonic Additive Synthesizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --amber: #a87a2a;
+            --amber-bright: #e8a838;
+            --amber-dark: #6a4a1a;
+            --gold: #c89b3c;
+            --gold-glow: #f0c060;
+            --deep: #0a0a12;
+            --panel: rgba(15, 12, 20, 0.85);
+            --text-primary: #d8d0c0;
+            --text-dim: #9a9080;
+        }
+
+        body {
+            font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+            background: var(--deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 50% 0%, rgba(168, 122, 42, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 100%, rgba(200, 155, 60, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='4' height='4' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='0.5' fill='rgba(200,155,60,0.04)'/%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+        .accent-border-top {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--amber-bright), transparent);
+            box-shadow: 0 0 15px rgba(232, 168, 56, 0.3);
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            max-width: 500px;
+        }
+
+        .glyph {
+            font-size: 2rem;
+            color: var(--amber-bright);
+            text-shadow: 0 0 20px rgba(232, 168, 56, 0.4);
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 200;
+            letter-spacing: 0.3em;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .subtitle {
+            font-size: clamp(0.75rem, 2vw, 0.9rem);
+            font-weight: 300;
+            letter-spacing: 0.15em;
+            color: var(--text-dim);
+            margin-bottom: 2.5rem;
+        }
+
+        .ornament-line {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .ornament-dot {
+            width: 4px;
+            height: 4px;
+            background: var(--amber-bright);
+            border-radius: 50%;
+            flex-shrink: 0;
+            opacity: 0.5;
+        }
+
+        .ornament-rule {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(232, 168, 56, 0.3), transparent);
+        }
+
+        .ornament-symbol {
+            color: var(--amber-bright);
+            font-size: 0.8rem;
+            flex-shrink: 0;
+            opacity: 0.5;
+        }
+
+        .description {
+            font-size: 0.85rem;
+            font-weight: 300;
+            line-height: 1.8;
+            color: var(--text-dim);
+            margin-bottom: 2rem;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        a.btn {
+            display: inline-block;
+            text-decoration: none;
+            font-family: 'Inter', 'Helvetica Neue', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 300;
+            letter-spacing: 0.15em;
+            padding: 14px 48px;
+            border-radius: 30px;
+            transition: all 0.4s ease;
+            width: 260px;
+            text-align: center;
+        }
+
+        a.btn.primary {
+            color: var(--text-primary);
+            background: rgba(232, 168, 56, 0.12);
+            border: 1px solid rgba(232, 168, 56, 0.4);
+            box-shadow: 0 4px 20px rgba(232, 168, 56, 0.1);
+        }
+
+        a.btn.primary:hover {
+            background: rgba(232, 168, 56, 0.2);
+            border-color: var(--amber-bright);
+            box-shadow: 0 4px 30px rgba(232, 168, 56, 0.2);
+        }
+
+        a.btn.secondary {
+            color: var(--text-dim);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        a.btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: var(--text-primary);
+        }
+
+        .badge {
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+            color: var(--amber-bright);
+            opacity: 0.7;
+            margin-left: 0.5rem;
+        }
+
+        footer {
+            position: fixed;
+            bottom: 2rem;
+            font-size: 0.7rem;
+            font-weight: 300;
+            letter-spacing: 0.1em;
+            color: var(--text-dim);
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="accent-border-top"></div>
+
+    <div class="container">
+        <div class="glyph">&#x2726;</div>
+        <h1>ADDITIVE</h1>
+        <p class="subtitle">Harmonic Additive Synthesizer</p>
+
+        <div class="ornament-line">
+            <span class="ornament-dot"></span>
+            <span class="ornament-rule"></span>
+            <span class="ornament-symbol">&#x2726;</span>
+            <span class="ornament-rule"></span>
+            <span class="ornament-dot"></span>
+        </div>
+
+        <p class="description">
+            Build complex timbres from pure harmonics.<br>
+            32 partials, 40+ presets, real-time spectral shaping.
+        </p>
+
+        <div class="buttons">
+            <a href="desktop.html" class="btn" id="btnDesktop">DESKTOP</a>
+            <a href="additive_mobile.html" class="btn" id="btnMobile">MOBILE</a>
+        </div>
+    </div>
+
+    <footer>
+        <p>Harmonics synthesized in real time</p>
+    </footer>
+
+    <script>
+        var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+                       (navigator.maxTouchPoints > 1 && window.innerWidth < 768);
+
+        var btnDesktop = document.getElementById('btnDesktop');
+        var btnMobile = document.getElementById('btnMobile');
+
+        if (isMobile) {
+            btnMobile.classList.add('primary');
+            btnDesktop.classList.add('secondary');
+            btnMobile.innerHTML += '<span class="badge">RECOMMENDED</span>';
+        } else {
+            btnDesktop.classList.add('primary');
+            btnMobile.classList.add('secondary');
+            btnDesktop.innerHTML += '<span class="badge">RECOMMENDED</span>';
+        }
+    </script>
+</body>
+</html>
